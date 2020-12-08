@@ -1,7 +1,28 @@
 import icalendar
 import sys
+import time
+import winsound
+from datetime import datetime, timedelta, timezone
 
 
+# keps running till the alarm goes off
+def alarm(set_alarm_timer, set_alarm_date):
+    while True:
+        time.sleep(1)
+        current_time = datetime.now()
+        curr_time = current_time.strftime("%H:%M:%S")
+        curr_date = current_time.strftime("%d/%m/%Y")
+        if curr_time == set_alarm_timer and curr_date == set_alarm_date:
+            print("Time to Wake up")
+            winsound.PlaySound("sound.wav", winsound.SND_ASYNC)
+            break
+
+
+# sets the date and time for the alarm then calles the alarm
+def actual_time(year_time, month_time, day_time, hour_time, min_time, sec_time):
+    set_alarm_timer = f"{hour_time}:{min_time}:{sec_time}"
+    set_alarm_date = f"{day_time}/{month_time}/{year_time}"
+    alarm(set_alarm_timer, set_alarm_date)
 
 # validates the input
 def verify_iput():
