@@ -6,13 +6,37 @@ from datetime import datetime, timedelta, timezone
 import tkinter as tk
 
 
+# sort the alarm list by date
+def sort_by_date(events_list):
+
+    for i in range(0, len(events_list)-1):
+        split_date1 = events_list[i][3].split('/')
+        print(split_date1)
+        d1 = datetime(int('20' + split_date1[2]), int(split_date1[0]), int(split_date1[1]))
+        for j in range(i+1, len(events_list)):
+            split_date2 = events_list[j][3].split('/')
+            print(split_date2)
+            d2 = datetime(int('20' + split_date2[2]), int(split_date2[0]), int(split_date2[1]))
+            if d1 > d2:
+                tem_list = events_list[i]
+                events_list[i] = events_list[j]
+                events_list[j] = tem_list
+
+    return events_list
+
+
+# sort the alarm list by time
+def sort_by_time(atribute):
+    return atribute[4]
+
+
 # creates new label with a certain message text
 def new_label(message):
     return tk.Label(
         text=message,
         fg="black",
         height=3,
-        )
+    )
 
 
 # creates a pop-up window with an alert, printing a certain description of the alarm
@@ -34,7 +58,7 @@ def alarm(set_alarm_timer, set_alarm_date):
     while True:
         time.sleep(1)
         current_time = datetime.now()
-        curr_time = current_time.strftime("%H:%M:%S")
+        curr_time = current_time.strftime("%H:%M")
         curr_date = current_time.strftime("%d/%m/%Y")
         if curr_time == set_alarm_timer and curr_date == set_alarm_date:
             print("Time to Wake up")
@@ -44,7 +68,7 @@ def alarm(set_alarm_timer, set_alarm_date):
 
 # sets the date and time for the alarm then calles the alarm
 def actual_time(year_time, month_time, day_time, hour_time, min_time, sec_time):
-    set_alarm_timer = f"{hour_time}:{min_time}:{sec_time}"
+    set_alarm_timer = f"{hour_time}:{min_time}"
     set_alarm_date = f"{day_time}/{month_time}/{year_time}"
     alarm(set_alarm_timer, set_alarm_date)
 
@@ -66,23 +90,28 @@ def verify_iput():
 file_habdler = verify_iput()
 file_cal = icalendar.Calendar.from_ical(file_habdler.read())
 
-for component in file_cal.walk():
-    if component.name == "VEVENT":
-        summary = component.get('summary')
-        description = component.get('description')
-        location = component.get('location')
-        startdt = component.get('dtstart').dt
-        enddt = component.get('dtend').dt
-        exdate = component.get('exdate')
-        print(f"{summary}-{description}-{location}-{startdt}-{enddt}-{exdate}")
-        # if component.get('rrule'):
-        #     print("An alarm should be set for this events!\n")
-        #     reoccur = component.get('rrule').to_ical().decode('utf-8')
-        #     for item in parse_recurrences(reoccur, startdt, exdate):
-        #         print(f'{item} {summary}: {description} - {location}\n')
-        # else:
-        #     print("There won't be an alarm for this events!\n")
-        #     start_date = startdt.strftime('%D %H:%M UTC')
-        #     end_date = enddt.strftime('%D %H:%M UTC')
-        #     print(f'{start_date}-{end_date} {summary}: {description} - {location}\n')
-file_habdler.close()
+if __name__ == "__main__":
+    events_list = []
+    for component in file_cal.walk():
+        if component.name == "VEVENT":
+            summary = component.get('summary')
+            description = component.get('description')
+            location = component.get('location')
+            startdt = component.get('dtstart').dt
+            enddt = component.get('dtend').dt
+            exdate = component.get('exdate')
+            start_date = startdt.strftime('%D')
+            start_time = startdt.strftime('%H:%M')
+            end_date = enddt.strftime('%D')
+            end_time = enddt.strftime('%H:%M')
+            # print(f"{summary}-{description}-{location}-{startdt}-{enddt}-{exdate}- start_date: {start_date} - start_time: {start_time} - end_date: {end_date} - end_time: {end_time}")
+            events_list.append([summary, description, location, start_date, start_time, end_date, end_time])
+
+    events_list.sort(reverse=True, key=sort_by_time)
+    events_list = sort_by_date(events_list)
+    for each_event in events_list:
+        for each_entrie in each_event:
+            print(each_entrie)
+        print("end of event\n")
+
+    file_habdler.close()
