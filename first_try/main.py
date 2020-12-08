@@ -40,19 +40,24 @@ def new_label(message):
 
 
 # creates a pop-up window with an alert, printing a certain description of the alarm
-def alarm_pop_up(description):
+def alarm_pop_up(event):
     window = tk.Tk()
 
-    label_alarm = new_label("Alarm")
-    label_description = new_label(description)
-    label_start = new_label("Incepe in 30 minute")
+    label_alarm = new_label("Alarm for " + event[0])
+    label_description = new_label(event[1])
+    label_local = new_label("Locul: " + event[2])
+    label_startdt = new_label("La data " + event[3])
+    label_starttm = new_label("De la " + event[4] + " pana la " + event[6])
     label_alarm.pack()
     label_description.pack()
-    label_start.pack()
+    label_local.pack()
+    label_startdt.pack()
+    label_starttm.pack()
 
     window.mainloop()
 
 
+# # creates a pop-up window with all alerts, printing all information about the alarm
 def alarms_pop_up(events_list):
     window = tk.Tk()
 
@@ -131,8 +136,7 @@ if __name__ == "__main__":
     events_list.sort(reverse=True, key=sort_by_time)
     events_list = sort_by_date(events_list)
     for each_event in events_list:
-        for each_entrie in each_event:
-            print(each_entrie)
+        alarm_pop_up(each_event)
         print("end of event\n")
     alarms_pop_up(events_list)
 
