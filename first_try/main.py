@@ -11,11 +11,9 @@ def sort_by_date(events_list):
 
     for i in range(0, len(events_list)-1):
         split_date1 = events_list[i][3].split('/')
-        print(split_date1)
         d1 = datetime(int('20' + split_date1[2]), int(split_date1[0]), int(split_date1[1]))
         for j in range(i+1, len(events_list)):
             split_date2 = events_list[j][3].split('/')
-            print(split_date2)
             d2 = datetime(int('20' + split_date2[2]), int(split_date2[0]), int(split_date2[1]))
             if d1 > d2:
                 tem_list = events_list[i]
@@ -103,21 +101,20 @@ def actual_time(year_time, month_time, day_time, hour_time, min_time, sec_time):
 def verify_iput():
     if ".ics" in sys.argv[1]:
         print("\nOpened a ics file!\n")
-        temp_handler = open(sys.argv[1], 'rb')
+        return "ics"
     elif ".json" in sys.argv[1]:
         print("Opened a custom json file!")
-        temp_handler = open(sys.argv[1])
+        return "json"
+        # temp_handler = open(sys.argv[1])
     else:
         print("Not a ics or a json file!")
         sys.exit(1)
-    return temp_handler
 
 
-file_habdler = verify_iput()
-file_cal = icalendar.Calendar.from_ical(file_habdler.read())
-
-if __name__ == "__main__":
-    events_list = []
+def get_ics_content():
+    temp_list = []
+    file_handler = open(sys.argv[1], 'rb')
+    file_cal = icalendar.Calendar.from_ical(file_handler.read())
     for component in file_cal.walk():
         if component.name == "VEVENT":
             summary = component.get('summary')
@@ -125,19 +122,30 @@ if __name__ == "__main__":
             location = component.get('location')
             startdt = component.get('dtstart').dt
             enddt = component.get('dtend').dt
-            exdate = component.get('exdate')
             start_date = startdt.strftime('%D')
             start_time = startdt.strftime('%H:%M')
             end_date = enddt.strftime('%D')
             end_time = enddt.strftime('%H:%M')
-            # print(f"{summary}-{description}-{location}-{startdt}-{enddt}-{exdate}- start_date: {start_date} - start_time: {start_time} - end_date: {end_date} - end_time: {end_time}")
-            events_list.append([summary, description, location, start_date, start_time, end_date, end_time])
+            # print(f"{summary}-{description}-{location}-{startdt}-{enddt}-{exdate}- start_date: {start_date} -
 
-    events_list.sort(reverse=True, key=sort_by_time)
-    events_list = sort_by_date(events_list)
+            # start_time: {start_time} - end_date: {end_date} - end_time: {end_time}")
+            temp_list.append([summary, description, location, start_date, start_time, end_date, end_time])
+    temp_list.sort(reverse=True, key=sort_by_time)
+    temp_list = sort_by_date(temp_list)
+    file_handler.close()
+    return temp_list
+
+
+if __name__ == "__main__":
+    events_list = []
+    file_type = verify_iput()
+    if file_type == "ics":
+        events_list = get_ics_content()
+    else:
+        print("We got custom json!")
+
     for each_event in events_list:
         alarm_pop_up(each_event)
         print("end of event\n")
     alarms_pop_up(events_list)
 
-    file_habdler.close()
