@@ -3,6 +3,30 @@ import sys
 import time
 import winsound
 from datetime import datetime, timedelta, timezone
+import tkinter as tk
+
+
+# creates new label with a certain message text
+def new_label(message):
+    return tk.Label(
+        text=message,
+        fg="black",
+        height=3,
+        )
+
+
+# creates a pop-up window with an alert, printing a certain description of the alarm
+def create_window(description):
+    window = tk.Tk()
+
+    label_alarm = new_label("Alarm")
+    label_description = new_label(description)
+    label_start = new_label("Incepe in 30 minute")
+    label_alarm.pack()
+    label_description.pack()
+    label_start.pack()
+
+    window.mainloop()
 
 
 # keps running till the alarm goes off
@@ -23,6 +47,7 @@ def actual_time(year_time, month_time, day_time, hour_time, min_time, sec_time):
     set_alarm_timer = f"{hour_time}:{min_time}:{sec_time}"
     set_alarm_date = f"{day_time}/{month_time}/{year_time}"
     alarm(set_alarm_timer, set_alarm_date)
+
 
 # validates the input
 def verify_iput():
