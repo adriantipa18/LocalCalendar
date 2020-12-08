@@ -35,12 +35,12 @@ def new_label(message):
     return tk.Label(
         text=message,
         fg="black",
-        height=3,
+        height=1,
     )
 
 
 # creates a pop-up window with an alert, printing a certain description of the alarm
-def create_window(description):
+def alarm_pop_up(description):
     window = tk.Tk()
 
     label_alarm = new_label("Alarm")
@@ -49,6 +49,27 @@ def create_window(description):
     label_alarm.pack()
     label_description.pack()
     label_start.pack()
+
+    window.mainloop()
+
+
+def alarms_pop_up(events_list):
+    window = tk.Tk()
+
+    for each_event in events_list:
+        label_alarm = new_label("Alarm for " + each_event[0])
+        label_description = new_label(each_event[1])
+        label_local = new_label("Locul: " + each_event[2])
+        label_startdt = new_label("La data " + each_event[3])
+        label_starttm = new_label("De la " + each_event[4] + " pana la " + each_event[6])
+        label_empty = new_label(" ")
+        label_alarm.pack()
+        label_description.pack()
+        label_local.pack()
+        label_startdt.pack()
+        label_starttm.pack()
+        label_empty.pack()
+
 
     window.mainloop()
 
@@ -113,5 +134,6 @@ if __name__ == "__main__":
         for each_entrie in each_event:
             print(each_entrie)
         print("end of event\n")
+    alarms_pop_up(events_list)
 
     file_habdler.close()
