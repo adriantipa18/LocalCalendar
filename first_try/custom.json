@@ -1,0 +1,19 @@
+{
+  "events": [
+  {"summary": "Machine Learing",
+  "description": "Course and other info",
+  "location": "Faculty of computer science",
+  "start_date": "09/12/2020",
+  "start_time": "14:27",
+  "end_date": "09/12/2020",
+  "end_time": "20:30"
+  },
+  {"summary": "CSSO",
+  "description": "Course and other info",
+  "location": "Faculty of computer science",
+  "start_date": "10/12/2020",
+  "start_time": "20:00",
+  "end_date": "10/12/2020",
+  "end_time": "20:30"
+    }]
+}
