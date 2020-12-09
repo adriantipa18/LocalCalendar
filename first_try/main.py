@@ -45,6 +45,19 @@ def new_label(message):
     )
 
 
+def error_pop_up(err_message):
+    window = tk.Tk()
+
+    label_error = tk.Label(
+        text=err_message,
+        fg="black",
+        height=5,
+    )
+
+    label_error.pack()
+
+    window.mainloop()
+
 # creates a pop-up window with an alert, printing a certain description of the alarm
 def alarm_pop_up(event):
     window = tk.Tk()
@@ -101,20 +114,25 @@ def alarm(event):
 # validates the input
 def verify_iput():
     if ".ics" in sys.argv[1]:
-        print("\nOpened a ics file!\n")
+        print("\nOpened a ics file!")
         return "ics"
     elif ".json" in sys.argv[1]:
-        print("Opened a custom json file!")
+        print("\nOpened a custom json file!")
         return "json"
     else:
-        print("Not a ics or a json file!")
+        print("\nNot a ics or a json file!")
         sys.exit(1)
 
 
+# opens and reads the content of a ics file
 def get_ics_content():
     temp_list = []
-    file_handler = open(sys.argv[1], 'rb')
-    file_cal = icalendar.Calendar.from_ical(file_handler.read())
+    try:
+        file_handler = open(sys.argv[1], 'rb')
+        file_cal = icalendar.Calendar.from_ical(file_handler.read())
+    except:
+        error_pop_up("An error ocured opening the file!\n Check the file an try again!")
+        sys.exit(-1)
     for content in file_cal.walk():
         if content.name == "VEVENT":
             summary = content.get('summary')
@@ -134,10 +152,15 @@ def get_ics_content():
     return temp_list
 
 
+# opens and reads the content of a json file
 def get_json_content():
     temp_list = []
-    with open(sys.argv[1]) as file_handler:
-        content = json.load(file_handler)
+    try:
+        with open(sys.argv[1]) as file_handler:
+            content = json.load(file_handler)
+    except:
+        error_pop_up("An error ocured opening the file!\n Check the file an try again!")
+        sys.exit(-1)
     events = content.get('events', 0)
     for event in events:
         summary = event.get('summary')
@@ -155,6 +178,26 @@ def get_json_content():
     return temp_list
 
 
+# validates the alarms, regarding date and time in relation to the current date and time
+def validate_date_time(events):
+    current_time = datetime.now()
+    curr_time = current_time.strftime("%H:%M")
+    validated_events = []
+    for event in events:
+        split_date = event[3].split('/')
+        if len(split_date[2]) < 4:
+            date = datetime(int('20' + split_date[2]), int(split_date[0]), int(split_date[1]))
+        else:
+            date = datetime(int(split_date[2]), int(split_date[0]), int(split_date[1]))
+        if date >= datetime.now():
+            if date == datetime.now() and event[4] >= curr_time:
+                validated_events.append(event)
+            else:
+                print("validated ", event)
+                validated_events.append(event)
+    return validated_events
+
+
 if __name__ == "__main__":
     events_list = []
     file_type = verify_iput()
@@ -163,6 +206,12 @@ if __name__ == "__main__":
     else:
         events_list = get_json_content()
 
+    print(events_list)
+    events_list = validate_date_time(events_list)
+
+    if not events_list:
+        error_pop_up("There is not a valid alarm to be set.")
+        sys.exit(0)
     alarms_pop_up(events_list)
 
     for event in events_list:

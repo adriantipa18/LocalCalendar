@@ -9,11 +9,11 @@
   "end_time": "20:30"
   },
   {"summary": "CSSO",
-  "description": "Course and other info",
+  "description" : "Course and other info",
   "location": "Faculty of computer science",
-  "start_date": "10/12/2020",
+  "start_date": "07/12/2020",
   "start_time": "20:00",
-  "end_date": "10/12/2020",
+  "end_date": "07/12/2020",
   "end_time": "20:30"
     }]
 }
