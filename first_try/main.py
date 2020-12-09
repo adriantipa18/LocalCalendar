@@ -4,6 +4,7 @@ import time
 import winsound
 from datetime import datetime, timedelta, timezone
 import tkinter as tk
+import json
 
 
 # sort the alarm list by date
@@ -11,10 +12,17 @@ def sort_by_date(events_list):
 
     for i in range(0, len(events_list)-1):
         split_date1 = events_list[i][3].split('/')
-        d1 = datetime(int('20' + split_date1[2]), int(split_date1[0]), int(split_date1[1]))
+        if len(split_date1[2]) < 4:
+            d1 = datetime(int('20' + split_date1[2]), int(split_date1[0]), int(split_date1[1]))
+        else:
+            d1 = datetime(int(split_date1[2]), int(split_date1[0]), int(split_date1[1]))
+
         for j in range(i+1, len(events_list)):
             split_date2 = events_list[j][3].split('/')
-            d2 = datetime(int('20' + split_date2[2]), int(split_date2[0]), int(split_date2[1]))
+            if len(split_date2[2]) < 4:
+                d2 = datetime(int('20' + split_date2[2]), int(split_date2[0]), int(split_date2[1]))
+            else:
+                d2 = datetime(int(split_date2[2]), int(split_date2[0]), int(split_date2[1]))
             if d1 > d2:
                 tem_list = events_list[i]
                 events_list[i] = events_list[j]
@@ -78,23 +86,16 @@ def alarms_pop_up(events_list):
 
 
 # keps running till the alarm goes off
-def alarm(set_alarm_timer, set_alarm_date):
+def alarm(event):
     while True:
         time.sleep(1)
         current_time = datetime.now()
         curr_time = current_time.strftime("%H:%M")
         curr_date = current_time.strftime("%d/%m/%Y")
-        if curr_time == set_alarm_timer and curr_date == set_alarm_date:
-            print("Time to Wake up")
+        if curr_time >= event[4] and curr_date == event[3]:
             winsound.PlaySound("sound.wav", winsound.SND_ASYNC)
+            alarm_pop_up(event)
             break
-
-
-# sets the date and time for the alarm then calles the alarm
-def actual_time(year_time, month_time, day_time, hour_time, min_time, sec_time):
-    set_alarm_timer = f"{hour_time}:{min_time}"
-    set_alarm_date = f"{day_time}/{month_time}/{year_time}"
-    alarm(set_alarm_timer, set_alarm_date)
 
 
 # validates the input
@@ -105,7 +106,6 @@ def verify_iput():
     elif ".json" in sys.argv[1]:
         print("Opened a custom json file!")
         return "json"
-        # temp_handler = open(sys.argv[1])
     else:
         print("Not a ics or a json file!")
         sys.exit(1)
@@ -115,21 +115,40 @@ def get_ics_content():
     temp_list = []
     file_handler = open(sys.argv[1], 'rb')
     file_cal = icalendar.Calendar.from_ical(file_handler.read())
-    for component in file_cal.walk():
-        if component.name == "VEVENT":
-            summary = component.get('summary')
-            description = component.get('description')
-            location = component.get('location')
-            startdt = component.get('dtstart').dt
-            enddt = component.get('dtend').dt
+    for content in file_cal.walk():
+        if content.name == "VEVENT":
+            summary = content.get('summary')
+            description = content.get('description')
+            location = content.get('location')
+            startdt = content.get('dtstart').dt
+            enddt = content.get('dtend').dt
             start_date = startdt.strftime('%D')
             start_time = startdt.strftime('%H:%M')
             end_date = enddt.strftime('%D')
             end_time = enddt.strftime('%H:%M')
-            # print(f"{summary}-{description}-{location}-{startdt}-{enddt}-{exdate}- start_date: {start_date} -
-
-            # start_time: {start_time} - end_date: {end_date} - end_time: {end_time}")
             temp_list.append([summary, description, location, start_date, start_time, end_date, end_time])
+
+    temp_list.sort(reverse=True, key=sort_by_time)
+    temp_list = sort_by_date(temp_list)
+    file_handler.close()
+    return temp_list
+
+
+def get_json_content():
+    temp_list = []
+    with open(sys.argv[1]) as file_handler:
+        content = json.load(file_handler)
+    events = content.get('events', 0)
+    for event in events:
+        summary = event.get('summary')
+        description = event.get('description')
+        location = event.get('location')
+        start_date = event.get('start_date')
+        start_time = event.get('start_time')
+        end_date = event.get('end_date')
+        end_time = event.get('end_time')
+        temp_list.append([summary, description, location, start_date, start_time, end_date, end_time])
+
     temp_list.sort(reverse=True, key=sort_by_time)
     temp_list = sort_by_date(temp_list)
     file_handler.close()
@@ -142,10 +161,12 @@ if __name__ == "__main__":
     if file_type == "ics":
         events_list = get_ics_content()
     else:
-        print("We got custom json!")
+        events_list = get_json_content()
 
-    for each_event in events_list:
-        alarm_pop_up(each_event)
-        print("end of event\n")
     alarms_pop_up(events_list)
+
+    for event in events_list:
+        alarm(event)
+        print("end of event\n")
+
 
