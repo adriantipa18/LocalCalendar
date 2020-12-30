@@ -1,0 +1,11 @@
+{
+  "events": [
+  {"summary": "Summary of meeting",
+  "description": "Description of meeting",
+  "location": "Place of meeting",
+  "start_date": "12/09/2020 date format = %m/%d/%y",
+  "start_time": "14:27 start hour of meeting < end time",
+  "end_date": "12/09/2020 >= start day",
+  "end_time": "20:30 end time > start time"
+  }]
+}

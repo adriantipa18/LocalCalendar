@@ -2,38 +2,35 @@ import icalendar
 import sys
 import time
 import winsound
-from datetime import datetime, timedelta, timezone
+from datetime import datetime
 import tkinter as tk
 import json
 
 
-# sort the alarm list by date
-def sort_by_date(events_list):
+# sort the alarm list by date and time
+def sort_by_date_time(events_list):
 
     for i in range(0, len(events_list)-1):
         split_date1 = events_list[i][3].split('/')
+        split_time1 = events_list[i][4].split(':')
         if len(split_date1[2]) < 4:
-            d1 = datetime(int('20' + split_date1[2]), int(split_date1[0]), int(split_date1[1]))
+            d1 = datetime(int('20' + split_date1[2]), int(split_date1[0]), int(split_date1[1]), int(split_time1[0]), int(split_time1[1]))
         else:
-            d1 = datetime(int(split_date1[2]), int(split_date1[0]), int(split_date1[1]))
+            d1 = datetime(int(split_date1[2]), int(split_date1[0]), int(split_date1[1]), int(split_time1[0]), int(split_time1[1]))
 
         for j in range(i+1, len(events_list)):
             split_date2 = events_list[j][3].split('/')
+            split_time2 = events_list[j][4].split(':')
             if len(split_date2[2]) < 4:
-                d2 = datetime(int('20' + split_date2[2]), int(split_date2[0]), int(split_date2[1]))
+                d2 = datetime(int('20' + split_date2[2]), int(split_date2[0]), int(split_date2[1]), int(split_time2[0]), int(split_time2[1]))
             else:
-                d2 = datetime(int(split_date2[2]), int(split_date2[0]), int(split_date2[1]))
+                d2 = datetime(int(split_date2[2]), int(split_date2[0]), int(split_date2[1]), int(split_time2[0]), int(split_time2[1]))
             if d1 > d2:
-                tem_list = events_list[i]
+                temp_list = events_list[i]
                 events_list[i] = events_list[j]
-                events_list[j] = tem_list
+                events_list[j] = temp_list
 
     return events_list
-
-
-# sort the alarm list by time
-def sort_by_time(atribute):
-    return atribute[4]
 
 
 # creates new label with a certain message text
@@ -104,8 +101,10 @@ def alarm(event):
         time.sleep(1)
         current_time = datetime.now()
         curr_time = current_time.strftime("%H:%M")
-        curr_date = current_time.strftime("%d/%m/%Y")
-        if curr_time >= event[4] and curr_date == event[3]:
+        curr_date = current_time.strftime("%m/%d/%Y")
+        # check date and time to be the same *error TO DELETE
+        # print(f"comparam timpul curent: {curr_time} cu {event[4]} si data curenta {curr_date} cu {event[3]}")
+        if curr_time == event[4] and curr_date == event[3]:
             winsound.PlaySound("sound.wav", winsound.SND_ASYNC)
             alarm_pop_up(event)
             break
@@ -146,8 +145,7 @@ def get_ics_content():
             end_time = enddt.strftime('%H:%M')
             temp_list.append([summary, description, location, start_date, start_time, end_date, end_time])
 
-    temp_list.sort(reverse=True, key=sort_by_time)
-    temp_list = sort_by_date(temp_list)
+    temp_list = sort_by_date_time(temp_list)
     file_handler.close()
     return temp_list
 
@@ -172,8 +170,8 @@ def get_json_content():
         end_time = event.get('end_time')
         temp_list.append([summary, description, location, start_date, start_time, end_date, end_time])
 
-    temp_list.sort(reverse=True, key=sort_by_time)
-    temp_list = sort_by_date(temp_list)
+    temp_list = sort_by_date_time(temp_list)
+
     file_handler.close()
     return temp_list
 
@@ -189,7 +187,7 @@ def validate_date_time(events):
             date = datetime(int('20' + split_date[2]), int(split_date[0]), int(split_date[1]))
         else:
             date = datetime(int(split_date[2]), int(split_date[0]), int(split_date[1]))
-        if date >= datetime.now():
+        if date.year == datetime.now().year and date.month == datetime.now().month and date.day >= datetime.now().day:
             if date == datetime.now() and event[4] >= curr_time:
                 validated_events.append(event)
             else:
@@ -206,7 +204,7 @@ if __name__ == "__main__":
     else:
         events_list = get_json_content()
 
-    print(events_list)
+    # print(events_list)
     events_list = validate_date_time(events_list)
 
     if not events_list:
@@ -217,5 +215,11 @@ if __name__ == "__main__":
     for event in events_list:
         alarm(event)
         print("end of event\n")
+    # TO DO
+    # reccuring events calculate the date
+    # logs for succes or failure
+    # validate logistics, regarding start_date < end_date and start_time < end_time
+    # exceptions for when the input is corrupted
+
 
 
