@@ -91,6 +91,33 @@ def add_months(event):
     return another_date.strftime("%m/%d/%Y")
 
 
+def add_weeks(event):
+    another_date = event[3].split('/')
+    if len(another_date[2]) < 4:
+        another_date = datetime(int('20' + another_date[2]), int(another_date[0]), int(another_date[1]))
+    else:
+        another_date = datetime(int(another_date[2]), int(another_date[0]), int(another_date[1]))
+    curr_date = datetime.now()
+    split_time = event[4].split(':')
+    split_time[0] = int(split_time[0])
+    split_time[1] = int(split_time[1])
+
+    while curr_date.month > another_date.month:
+        another_date += timedelta(7)
+
+    while curr_date.day > another_date.day:
+        another_date += timedelta(7)
+
+    if curr_date.day == another_date.day:
+        if curr_date.hour > int(split_time[0]):
+            another_date += timedelta(7)
+        elif int(split_time[0]) == curr_date.hour:
+            if curr_date.minute >= int(split_time[1]):
+                another_date += timedelta(7)
+
+    return another_date.strftime("%m/%d/%Y")
+
+
 # add days to a date, returns the next set alarm
 def add_days(event):
     another_date = event[3].split('/')
@@ -102,17 +129,14 @@ def add_days(event):
     split_time = event[4].split(':')
     split_time[0] = int(split_time[0])
     split_time[1] = int(split_time[1])
-    print(split_time)
 
     while curr_date.day > another_date.day:
         another_date += timedelta(1)
 
-    print(f"compar timpul {int(split_time[0])} : {int(split_time[1])} cu {curr_date.hour} : {curr_date.minute}")
     if curr_date.hour > int(split_time[0]):
         another_date += timedelta(1)
     elif int(split_time[0]) == curr_date.hour:
         if curr_date.minute >= int(split_time[1]):
-            print("ajunge aici")
             another_date += timedelta(1)
 
     return another_date.strftime("%m/%d/%Y")
@@ -317,6 +341,7 @@ if __name__ == "__main__":
     # print(add_years(temp_event))
     # print(add_months(temp_event))
     # print(add_days(temp_event))
+    # print(add_weeks(temp_event))
     events_list = []
     file_type = verify_iput()
     if file_type == "ics":
