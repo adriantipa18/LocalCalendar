@@ -2,29 +2,143 @@ import icalendar
 import sys
 import time
 import winsound
-from datetime import datetime
+from datetime import datetime, timedelta
 import tkinter as tk
 import json
 
 
+def check_leap_year(year):
+    if (year % 4) == 0:
+        if (year % 100) == 0:
+            if (year % 400) == 0:
+                return True
+            else:
+                return False
+        else:
+            return True
+    else:
+        return False
+
+
+# add years to a date, returns the next set alarm
+def add_years(event):
+    another_date = event[3].split('/')
+    if len(another_date[2]) < 4:
+        another_date = datetime(int('20' + another_date[2]), int(another_date[0]), int(another_date[1]))
+    else:
+        another_date = datetime(int(another_date[2]), int(another_date[0]), int(another_date[1]))
+    curr_date = datetime.now()
+
+    while curr_date.year > another_date.year and curr_date.month > another_date.day and curr_date.day > another_date.day:
+        if check_leap_year(another_date.year):
+            another_date += timedelta(366)
+        else:
+            another_date += timedelta(365)
+
+    if curr_date.year == another_date.year:
+        if curr_date.month > another_date.day:
+            if check_leap_year(another_date.year):
+                another_date += timedelta(366)
+            else:
+                another_date += timedelta(365)
+        elif curr_date.month == another_date.month:
+            if curr_date.day > another_date.day:
+                if check_leap_year(another_date.year):
+                    another_date += timedelta(366)
+                else:
+                    another_date += timedelta(365)
+
+    return another_date.strftime("%m/%d/%Y")
+
+
+# add months to a date, returns the next set alarm
+def add_months(event):
+    another_date = event[3].split('/')
+    if len(another_date[2]) < 4:
+        another_date = datetime(int('20' + another_date[2]), int(another_date[0]), int(another_date[1]))
+    else:
+        another_date = datetime(int(another_date[2]), int(another_date[0]), int(another_date[1]))
+    curr_date = datetime.now()
+
+    while curr_date.year != another_date.year:
+        if check_leap_year(another_date.year):
+            another_date += timedelta(366)
+        else:
+            another_date += timedelta(365)
+
+    while curr_date.month > another_date.month:
+        if another_date.month == 1 or another_date.month == 3 or another_date.month == 5 or another_date.month == 7 or another_date.month == 8 or another_date.month == 10 or another_date.month == 12:
+            another_date += timedelta(31)
+        elif another_date.month == 2:
+            if check_leap_year(another_date.year):
+                another_date += timedelta(29)
+            else:
+                another_date += timedelta(28)
+        else:
+            another_date += timedelta(30)
+
+    if curr_date.day > another_date.day:
+        if another_date.month == 1 or another_date.month == 3 or another_date.month == 5 or another_date.month == 7 or another_date.month == 8 or another_date.month == 10 or another_date.month == 12:
+            another_date += timedelta(31)
+        elif another_date.month == 2:
+            if check_leap_year(another_date.year):
+                another_date += timedelta(29)
+            else:
+                another_date += timedelta(28)
+        else:
+            another_date += timedelta(30)
+
+    return another_date.strftime("%m/%d/%Y")
+
+
+# add days to a date, returns the next set alarm
+def add_days(event):
+    another_date = event[3].split('/')
+    if len(another_date[2]) < 4:
+        another_date = datetime(int('20' + another_date[2]), int(another_date[0]), int(another_date[1]))
+    else:
+        another_date = datetime(int(another_date[2]), int(another_date[0]), int(another_date[1]))
+    curr_date = datetime.now()
+    split_time = event[4].split(':')
+    split_time[0] = int(split_time[0])
+    split_time[1] = int(split_time[1])
+    print(split_time)
+
+    while curr_date.day > another_date.day:
+        another_date += timedelta(1)
+
+    print(f"compar timpul {int(split_time[0])} : {int(split_time[1])} cu {curr_date.hour} : {curr_date.minute}")
+    if curr_date.hour > int(split_time[0]):
+        another_date += timedelta(1)
+    elif int(split_time[0]) == curr_date.hour:
+        if curr_date.minute >= int(split_time[1]):
+            print("ajunge aici")
+            another_date += timedelta(1)
+
+    return another_date.strftime("%m/%d/%Y")
+
+
 # sort the alarm list by date and time
 def sort_by_date_time(events_list):
-
-    for i in range(0, len(events_list)-1):
+    for i in range(0, len(events_list) - 1):
         split_date1 = events_list[i][3].split('/')
         split_time1 = events_list[i][4].split(':')
         if len(split_date1[2]) < 4:
-            d1 = datetime(int('20' + split_date1[2]), int(split_date1[0]), int(split_date1[1]), int(split_time1[0]), int(split_time1[1]))
+            d1 = datetime(int('20' + split_date1[2]), int(split_date1[0]), int(split_date1[1]), int(split_time1[0]),
+                          int(split_time1[1]))
         else:
-            d1 = datetime(int(split_date1[2]), int(split_date1[0]), int(split_date1[1]), int(split_time1[0]), int(split_time1[1]))
+            d1 = datetime(int(split_date1[2]), int(split_date1[0]), int(split_date1[1]), int(split_time1[0]),
+                          int(split_time1[1]))
 
-        for j in range(i+1, len(events_list)):
+        for j in range(i + 1, len(events_list)):
             split_date2 = events_list[j][3].split('/')
             split_time2 = events_list[j][4].split(':')
             if len(split_date2[2]) < 4:
-                d2 = datetime(int('20' + split_date2[2]), int(split_date2[0]), int(split_date2[1]), int(split_time2[0]), int(split_time2[1]))
+                d2 = datetime(int('20' + split_date2[2]), int(split_date2[0]), int(split_date2[1]), int(split_time2[0]),
+                              int(split_time2[1]))
             else:
-                d2 = datetime(int(split_date2[2]), int(split_date2[0]), int(split_date2[1]), int(split_time2[0]), int(split_time2[1]))
+                d2 = datetime(int(split_date2[2]), int(split_date2[0]), int(split_date2[1]), int(split_time2[0]),
+                              int(split_time2[1]))
             if d1 > d2:
                 temp_list = events_list[i]
                 events_list[i] = events_list[j]
@@ -54,6 +168,7 @@ def error_pop_up(err_message):
     label_error.pack()
 
     window.mainloop()
+
 
 # creates a pop-up window with an alert, printing a certain description of the alarm
 def alarm_pop_up(event):
@@ -90,7 +205,6 @@ def alarms_pop_up(events_list):
         label_startdt.pack()
         label_starttm.pack()
         label_empty.pack()
-
 
     window.mainloop()
 
@@ -197,6 +311,12 @@ def validate_date_time(events):
 
 
 if __name__ == "__main__":
+    # date = datetime.now()
+    # print(date.hour)
+    # temp_event = [0, 0, 0, "12/10/2020", "12:00", "14:58", 0]
+    # print(add_years(temp_event))
+    # print(add_months(temp_event))
+    # print(add_days(temp_event))
     events_list = []
     file_type = verify_iput()
     if file_type == "ics":
@@ -216,10 +336,6 @@ if __name__ == "__main__":
         alarm(event)
         print("end of event\n")
     # TO DO
-    # reccuring events calculate the date
     # logs for succes or failure
     # validate logistics, regarding start_date < end_date and start_time < end_time
     # exceptions for when the input is corrupted
-
-
-
