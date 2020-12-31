@@ -21,8 +21,8 @@ def check_leap_year(year):
 
 
 # add years to a date, returns the next set alarm
-def add_years(event):
-    another_date = event[3].split('/')
+def add_years(start_date):
+    another_date = start_date.split('/')
     if len(another_date[2]) < 4:
         another_date = datetime(int('20' + another_date[2]), int(another_date[0]), int(another_date[1]))
     else:
@@ -52,8 +52,8 @@ def add_years(event):
 
 
 # add months to a date, returns the next set alarm
-def add_months(event):
-    another_date = event[3].split('/')
+def add_months(start_date):
+    another_date = start_date.split('/')
     if len(another_date[2]) < 4:
         another_date = datetime(int('20' + another_date[2]), int(another_date[0]), int(another_date[1]))
     else:
@@ -91,14 +91,14 @@ def add_months(event):
     return another_date.strftime("%m/%d/%Y")
 
 
-def add_weeks(event):
-    another_date = event[3].split('/')
+def add_weeks(start_date, start_time):
+    another_date = start_date.split('/')
     if len(another_date[2]) < 4:
         another_date = datetime(int('20' + another_date[2]), int(another_date[0]), int(another_date[1]))
     else:
         another_date = datetime(int(another_date[2]), int(another_date[0]), int(another_date[1]))
     curr_date = datetime.now()
-    split_time = event[4].split(':')
+    split_time = start_time.split(':')
     split_time[0] = int(split_time[0])
     split_time[1] = int(split_time[1])
 
@@ -119,14 +119,14 @@ def add_weeks(event):
 
 
 # add days to a date, returns the next set alarm
-def add_days(event):
-    another_date = event[3].split('/')
+def add_days(start_date, start_time):
+    another_date = start_date.split('/')
     if len(another_date[2]) < 4:
         another_date = datetime(int('20' + another_date[2]), int(another_date[0]), int(another_date[1]))
     else:
         another_date = datetime(int(another_date[2]), int(another_date[0]), int(another_date[1]))
     curr_date = datetime.now()
-    split_time = event[4].split(':')
+    split_time = start_time.split(':')
     split_time[0] = int(split_time[0])
     split_time[1] = int(split_time[1])
 
@@ -240,8 +240,6 @@ def alarm(event):
         current_time = datetime.now()
         curr_time = current_time.strftime("%H:%M")
         curr_date = current_time.strftime("%m/%d/%Y")
-        # check date and time to be the same *error TO DELETE
-        # print(f"comparam timpul curent: {curr_time} cu {event[4]} si data curenta {curr_date} cu {event[3]}")
         if curr_time == event[4] and curr_date == event[3]:
             winsound.PlaySound("sound.wav", winsound.SND_ASYNC)
             alarm_pop_up(event)
@@ -281,7 +279,26 @@ def get_ics_content():
             start_time = startdt.strftime('%H:%M')
             end_date = enddt.strftime('%D')
             end_time = enddt.strftime('%H:%M')
-            temp_list.append([summary, description, location, start_date, start_time, end_date, end_time])
+            rrule = content.get('rrule')
+            if rrule:
+                freq = rrule.__getitem__('freq')
+            else:
+                freq = ""
+            temp_list.append([summary, description, location, start_date, start_time, end_date, end_time, freq])
+
+    for each_alarm in temp_list:
+        if ' '.join(each_alarm[7]) == 'YEARLY':
+            each_alarm[3] = add_years(each_alarm[3])
+            each_alarm[5] = add_years(each_alarm[5])
+        elif ' '.join(each_alarm[7]) == 'MONTHLY':
+            each_alarm[3] = add_months(each_alarm[3])
+            each_alarm[5] = add_months(each_alarm[5])
+        elif ' '.join(each_alarm[7]) == 'WEEKLY':
+            each_alarm[3] = add_weeks(each_alarm[3], each_alarm[4])
+            each_alarm[5] = add_weeks(each_alarm[5], each_alarm[4])
+        elif ' '.join(each_alarm[7]) == 'DAILY':
+            each_alarm[3] = add_days(each_alarm[3], each_alarm[4])
+            each_alarm[5] = add_days(each_alarm[5], each_alarm[4])
 
     temp_list = sort_by_date_time(temp_list)
     file_handler.close()
@@ -306,8 +323,22 @@ def get_json_content():
         start_time = event.get('start_time')
         end_date = event.get('end_date')
         end_time = event.get('end_time')
-        temp_list.append([summary, description, location, start_date, start_time, end_date, end_time])
+        freq = event.get('freq')
+        temp_list.append([summary, description, location, start_date, start_time, end_date, end_time, freq])
 
+    for each_alarm in temp_list:
+        if each_alarm[7] == 'yearly':
+            each_alarm[3] = add_years(each_alarm[3])
+            each_alarm[5] = add_years(each_alarm[5])
+        elif each_alarm[7] == 'monthly':
+            each_alarm[3] = add_months(each_alarm[3])
+            each_alarm[5] = add_months(each_alarm[5])
+        elif each_alarm[7] == 'weekly':
+            each_alarm[3] = add_weeks(each_alarm[3], each_alarm[4])
+            each_alarm[5] = add_weeks(each_alarm[5], each_alarm[4])
+        elif each_alarm[7] == 'daily':
+            each_alarm[3] = add_days(each_alarm[3], each_alarm[4])
+            each_alarm[5] = add_days(each_alarm[5], each_alarm[4])
     temp_list = sort_by_date_time(temp_list)
 
     file_handler.close()
@@ -325,12 +356,23 @@ def validate_date_time(events):
             date = datetime(int('20' + split_date[2]), int(split_date[0]), int(split_date[1]))
         else:
             date = datetime(int(split_date[2]), int(split_date[0]), int(split_date[1]))
-        if date.year == datetime.now().year and date.month == datetime.now().month and date.day >= datetime.now().day:
-            if date == datetime.now() and event[4] >= curr_time:
-                validated_events.append(event)
+        if date.year > datetime.now().year:
+            validated_events.append(event)
+        elif date.year == datetime.now().year and date.month >= datetime.now().month:
+            if date.month == datetime.now().month:
+                if date.day > datetime.now().day:
+                    validated_events.append(event)
+                elif date.day == datetime.now().day and event[4] >= curr_time:
+                    validated_events.append(event)
             else:
-                print("validated ", event)
                 validated_events.append(event)
+
+        # if date.year >= datetime.now().year and date.month >= datetime.now().month and date.day >= datetime.now().day:
+        #     if date == datetime.now() and event[4] >= curr_time:
+        #         validated_events.append(event)
+        #     else:
+        #         print("validated ", event)
+        #         validated_events.append(event)
     return validated_events
 
 
@@ -338,10 +380,10 @@ if __name__ == "__main__":
     # date = datetime.now()
     # print(date.hour)
     # temp_event = [0, 0, 0, "12/10/2020", "12:00", "14:58", 0]
-    # print(add_years(temp_event))
-    # print(add_months(temp_event))
-    # print(add_days(temp_event))
-    # print(add_weeks(temp_event))
+    # print(add_years("12/10/2020"))
+    # print(add_months("12/10/2020"))
+    # print(add_days("12/10/2020", "12:00"))
+    # print(add_weeks("12/10/2020", "12:00"))
     events_list = []
     file_type = verify_iput()
     if file_type == "ics":
@@ -361,6 +403,7 @@ if __name__ == "__main__":
         alarm(event)
         print("end of event\n")
     # TO DO
+    # verify the frequency of the alarms (ics and json) and put them in the unsorted list.
     # logs for succes or failure
     # validate logistics, regarding start_date < end_date and start_time < end_time
     # exceptions for when the input is corrupted
