@@ -10,6 +10,29 @@ import logging
 logging.basicConfig(level=logging.DEBUG)
 
 
+# creates a datetime based on start_date and start_time of a certain event
+def create_datetime(start_date, start_time):
+    try:
+        another_date = start_date.split('/')
+    except:
+        logging.error("Corrupt data! Review the dates in the current file!")
+        sys.exit(-1)
+    try:
+        split_time = start_time.split(':')
+
+    except:
+        logging.error("Corrupt data! Review the timestamps in the current file!")
+        sys.exit(-1)
+
+    if len(another_date[2]) < 4:
+        alarm_time = datetime(int('20' + another_date[2]), int(another_date[0]), int(another_date[1]), int(split_time[0]), int(split_time[1]))
+    else:
+        alarm_time = datetime(int(another_date[2]), int(another_date[0]), int(another_date[1]), int(split_time[0]), int(split_time[1]))
+
+    return alarm_time
+
+
+# checks if a year is a leap year
 def check_leap_year(year):
     if (year % 4) == 0:
         if (year % 100) == 0:
@@ -140,32 +163,34 @@ def add_weeks(start_date, start_time):
 
 # add days to a date, returns the next set alarm
 def add_days(start_date, start_time):
-    try:
-        another_date = start_date.split('/')
-    except:
-        logging.error("Corrupt data! Review the dates in the current file!")
-        sys.exit(-1)
-    if len(another_date[2]) < 4:
-        another_date = datetime(int('20' + another_date[2]), int(another_date[0]), int(another_date[1]))
-    else:
-        another_date = datetime(int(another_date[2]), int(another_date[0]), int(another_date[1]))
+    # try:
+    #     another_date = start_date.split('/')
+    # except:
+    #     logging.error("Corrupt data! Review the dates in the current file!")
+    #     sys.exit(-1)
+    # if len(another_date[2]) < 4:
+    #     another_date = datetime(int('20' + another_date[2]), int(another_date[0]), int(another_date[1]))
+    # else:
+    #     another_date = datetime(int(another_date[2]), int(another_date[0]), int(another_date[1]))
+    # curr_date = datetime.now()
+    # try:
+    #     split_time = start_time.split(':')
+    #
+    # except:
+    #     logging.error("Corrupt data! Review the timestamps in the current file!")
+    #     sys.exit(-1)
+    # split_time[0] = int(split_time[0])
+    # split_time[1] = int(split_time[1])
+
     curr_date = datetime.now()
-    try:
-        split_time = start_time.split(':')
-
-    except:
-        logging.error("Corrupt data! Review the timestamps in the current file!")
-        sys.exit(-1)
-    split_time[0] = int(split_time[0])
-    split_time[1] = int(split_time[1])
-
+    another_date = create_datetime(start_date, start_time)
     while curr_date.day > another_date.day:
         another_date += timedelta(1)
 
-    if curr_date.hour > int(split_time[0]):
+    if curr_date.hour > another_date.hour:
         another_date += timedelta(1)
-    elif int(split_time[0]) == curr_date.hour:
-        if curr_date.minute >= int(split_time[1]):
+    elif another_date.hour == curr_date.hour:
+        if curr_date.minute >= another_date.minute:
             another_date += timedelta(1)
 
     return another_date.strftime("%m/%d/%Y")
@@ -269,9 +294,15 @@ def alarm(event):
     while True:
         time.sleep(1)
         current_time = datetime.now()
-        curr_time = current_time.strftime("%H:%M")
-        curr_date = current_time.strftime("%m/%d/%Y")
-        if curr_time == event[4] and curr_date == event[3]:
+        # temp_date = event[3].split('/')
+        # temp_time = event[4].split(':')
+        # if len(temp_date[2]) < 4:
+        #     alarm_time = datetime(int('20' + temp_date[2]), int(temp_date[0]), int(temp_date[1]), int(temp_time[0]), int(temp_time[1]))
+        # else:
+        #     alarm_time = datetime(int(temp_date[2]), int(temp_date[0]), int(temp_date[1]), int(temp_time[0]), int(temp_time[1]))
+        alarm_time = create_datetime(event[3], event[4])
+        logging.info(f'current time {current_time} <> alarm setoff time {alarm_time}')
+        if current_time >= alarm_time:
             winsound.PlaySound("sound.wav", winsound.SND_ASYNC)
             alarm_pop_up(event)
             break
