@@ -47,36 +47,15 @@ def check_leap_year(year):
 
 
 # add years to a date, returns the next set alarm
-def add_years(start_date):
-    try:
-        another_date = start_date.split('/')
-    except:
-        logging.error("Corrupt data! Review the dates in the current file!")
-        sys.exit(-1)
-    if len(another_date[2]) < 4:
-        another_date = datetime(int('20' + another_date[2]), int(another_date[0]), int(another_date[1]))
-    else:
-        another_date = datetime(int(another_date[2]), int(another_date[0]), int(another_date[1]))
+def add_years(start_date, start_hour):
+    another_date = create_datetime(start_date, start_hour)
     curr_date = datetime.now()
 
-    while curr_date.year > another_date.year and curr_date.month > another_date.day and curr_date.day > another_date.day:
+    while curr_date >= another_date:
         if check_leap_year(another_date.year):
             another_date += timedelta(366)
         else:
             another_date += timedelta(365)
-
-    if curr_date.year == another_date.year:
-        if curr_date.month > another_date.day:
-            if check_leap_year(another_date.year):
-                another_date += timedelta(366)
-            else:
-                another_date += timedelta(365)
-        elif curr_date.month == another_date.month:
-            if curr_date.day > another_date.day:
-                if check_leap_year(another_date.year):
-                    another_date += timedelta(366)
-                else:
-                    another_date += timedelta(365)
 
     return another_date.strftime("%m/%d/%Y")
 
@@ -126,24 +105,9 @@ def add_months(start_date):
 
 
 def add_weeks(start_date, start_time):
-    try:
-        another_date = start_date.split('/')
-    except:
-        logging.error("Corrupt data! Review the dates in the current file!")
-        sys.exit(-1)
-    if len(another_date[2]) < 4:
-        another_date = datetime(int('20' + another_date[2]), int(another_date[0]), int(another_date[1]))
-    else:
-        another_date = datetime(int(another_date[2]), int(another_date[0]), int(another_date[1]))
+    another_date = create_datetime(start_date, start_time)
     curr_date = datetime.now()
-    try:
-        split_time = start_time.split(':')
 
-    except:
-        logging.error("Corrupt data! Review the timestamps in the current file!")
-        sys.exit(-1)
-    split_time[0] = int(split_time[0])
-    split_time[1] = int(split_time[1])
     while curr_date.month != another_date.month:
         another_date += timedelta(7)
 
@@ -151,10 +115,10 @@ def add_weeks(start_date, start_time):
         another_date += timedelta(7)
 
     if curr_date.day == another_date.day:
-        if curr_date.hour > int(split_time[0]):
+        if curr_date.hour > another_date.hour:
             another_date += timedelta(7)
-        elif int(split_time[0]) == curr_date.hour:
-            if curr_date.minute >= int(split_time[1]):
+        elif another_date.hour == curr_date.hour:
+            if curr_date.minute >= another_date.minute:
                 another_date += timedelta(7)
 
     return another_date.strftime("%m/%d/%Y")
@@ -164,6 +128,7 @@ def add_weeks(start_date, start_time):
 def add_days(start_date, start_time):
     curr_date = datetime.now()
     another_date = create_datetime(start_date, start_time)
+
     while curr_date.day > another_date.day:
         another_date += timedelta(1)
 
@@ -296,8 +261,8 @@ def get_ics_content():
 
     for each_alarm in temp_list:
         if ' '.join(each_alarm[7]) == 'YEARLY':
-            each_alarm[3] = add_years(each_alarm[3])
-            each_alarm[5] = add_years(each_alarm[5])
+            each_alarm[3] = add_years(each_alarm[3], each_alarm[4])
+            each_alarm[5] = add_years(each_alarm[5], each_alarm[4])
         elif ' '.join(each_alarm[7]) == 'MONTHLY':
             each_alarm[3] = add_months(each_alarm[3])
             each_alarm[5] = add_months(each_alarm[5])
@@ -339,8 +304,8 @@ def get_json_content():
 
     for each_alarm in temp_list:
         if each_alarm[7] == 'yearly':
-            each_alarm[3] = add_years(each_alarm[3])
-            each_alarm[5] = add_years(each_alarm[5])
+            each_alarm[3] = add_years(each_alarm[3], each_alarm[4])
+            each_alarm[5] = add_years(each_alarm[5], each_alarm[4])
         elif each_alarm[7] == 'monthly':
             each_alarm[3] = add_months(each_alarm[3])
             each_alarm[5] = add_months(each_alarm[5])
@@ -385,10 +350,10 @@ if __name__ == "__main__":
     # date = datetime.now()
     # print(date.hour)
     # temp_event = [0, 0, 0, "12/10/2020", "12:00", "14:58", 0]
-    # print(add_years("12/10/2020"))
+    # print(add_years("01/01/2021", "10:00"))
     # print(add_months("12/10/2020"))
     # print(add_days("12/10/2020", "12:00"))
-    # print(add_weeks("12/10/2020", "12:00"))
+    # print(add_weeks("01/01/2021", "12:00"))
     events_list = []
     file_type = verify_iput()
     if file_type == "ics":
