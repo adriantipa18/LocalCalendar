@@ -5,6 +5,9 @@ import winsound
 from datetime import datetime, timedelta
 import tkinter as tk
 import json
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
 
 
 def check_leap_year(year):
@@ -25,7 +28,7 @@ def add_years(start_date):
     try:
         another_date = start_date.split('/')
     except:
-        error_pop_up("Corrupt data! Review the dates in the current file!\n")
+        logging.error("Corrupt data! Review the dates in the current file!")
         sys.exit(-1)
     if len(another_date[2]) < 4:
         another_date = datetime(int('20' + another_date[2]), int(another_date[0]), int(another_date[1]))
@@ -60,7 +63,7 @@ def add_months(start_date):
     try:
         another_date = start_date.split('/')
     except:
-        error_pop_up("Corrupt data! Review the dates in the current file!\n")
+        logging.error("Corrupt data! Review the dates in the current file!")
         sys.exit(-1)
     if len(another_date[2]) < 4:
         another_date = datetime(int('20' + another_date[2]), int(another_date[0]), int(another_date[1]))
@@ -103,7 +106,7 @@ def add_weeks(start_date, start_time):
     try:
         another_date = start_date.split('/')
     except:
-        error_pop_up("Corrupt data! Review the dates in the current file!\n")
+        logging.error("Corrupt data! Review the dates in the current file!")
         sys.exit(-1)
     if len(another_date[2]) < 4:
         another_date = datetime(int('20' + another_date[2]), int(another_date[0]), int(another_date[1]))
@@ -114,7 +117,7 @@ def add_weeks(start_date, start_time):
         split_time = start_time.split(':')
 
     except:
-        error_pop_up("Corrupt data! Review the timestamps in the current file!\n")
+        logging.error("Corrupt data! Review the timestamps in the current file!")
         sys.exit(-1)
     split_time[0] = int(split_time[0])
     split_time[1] = int(split_time[1])
@@ -140,7 +143,7 @@ def add_days(start_date, start_time):
     try:
         another_date = start_date.split('/')
     except:
-        error_pop_up("Corrupt data! Review the dates in the current file!\n")
+        logging.error("Corrupt data! Review the dates in the current file!")
         sys.exit(-1)
     if len(another_date[2]) < 4:
         another_date = datetime(int('20' + another_date[2]), int(another_date[0]), int(another_date[1]))
@@ -151,7 +154,7 @@ def add_days(start_date, start_time):
         split_time = start_time.split(':')
 
     except:
-        error_pop_up("Corrupt data! Review the timestamps in the current file!\n")
+        logging.error("Corrupt data! Review the timestamps in the current file!")
         sys.exit(-1)
     split_time[0] = int(split_time[0])
     split_time[1] = int(split_time[1])
@@ -174,12 +177,12 @@ def sort_by_date_time(events_list):
         try:
             split_date1 = events_list[i][3].split('/')
         except:
-            error_pop_up("Corrupt data! Review the dates in the current file!\n")
+            logging.error("Corrupt data! Review the dates in the current file!")
             sys.exit(-1)
         try:
             split_time1 = events_list[i][4].split(':')
         except:
-            error_pop_up("Corrupt data! Review the timestamps in the current file!\n")
+            logging.error("Corrupt data! Review the timestamps in the current file!")
             sys.exit(-1)
         if len(split_date1[2]) < 4:
             d1 = datetime(int('20' + split_date1[2]), int(split_date1[0]), int(split_date1[1]), int(split_time1[0]),
@@ -192,12 +195,12 @@ def sort_by_date_time(events_list):
             try:
                 split_date2 = events_list[j][3].split('/')
             except:
-                error_pop_up("Corrupt data! Review the dates in the current file!\n")
+                logging.error("Corrupt data! Review the dates in the current file!")
                 sys.exit(-1)
             try:
                 split_time2 = events_list[j][4].split(':')
             except:
-                error_pop_up("Corrupt data! Review the timestamps in the current file!\n")
+                logging.error("Corrupt data! Review the timestamps in the current file!")
                 sys.exit(-1)
             if len(split_date2[2]) < 4:
                 d2 = datetime(int('20' + split_date2[2]), int(split_date2[0]), int(split_date2[1]), int(split_time2[0]),
@@ -220,20 +223,6 @@ def new_label(message):
         fg="black",
         height=1,
     )
-
-
-def error_pop_up(err_message):
-    window = tk.Tk()
-
-    label_error = tk.Label(
-        text=err_message,
-        fg="black",
-        height=5,
-    )
-
-    label_error.pack()
-
-    window.mainloop()
 
 
 # creates a pop-up window with an alert, printing a certain description of the alarm
@@ -291,13 +280,13 @@ def alarm(event):
 # validates the input
 def verify_iput():
     if ".ics" in sys.argv[1]:
-        print("\nOpened a ics file!")
+        logging.info("Opened a ics file!")
         return "ics"
     elif ".json" in sys.argv[1]:
-        print("\nOpened a custom json file!")
+        logging.info("Opened a custom json file!")
         return "json"
     else:
-        print("\nNot a ics or a json file!")
+        logging.error("Not a ics or a json file!")
         sys.exit(1)
 
 
@@ -308,7 +297,7 @@ def get_ics_content():
         file_handler = open(sys.argv[1], 'rb')
         file_cal = icalendar.Calendar.from_ical(file_handler.read())
     except:
-        error_pop_up("An error occurred opening the file!\n Check the file an try again!")
+        logging.error("An error occurred opening the file! Check the file an try again!")
         sys.exit(-1)
     for content in file_cal.walk():
         try:
@@ -329,7 +318,7 @@ def get_ics_content():
                     freq = ""
                 temp_list.append([summary, description, location, start_date, start_time, end_date, end_time, freq])
         except:
-            error_pop_up("An error occurred while reading the content of ics file! Corrupt Data!\n")
+            logging.error("An error occurred while reading the content of ics file! Corrupt Data!")
 
     for each_alarm in temp_list:
         if ' '.join(each_alarm[7]) == 'YEARLY':
@@ -357,7 +346,7 @@ def get_json_content():
         with open(sys.argv[1]) as file_handler:
             content = json.load(file_handler)
     except:
-        error_pop_up("An error occurred opening the file!\n Check the file an try again!")
+        logging.error("An error occurred opening the file! Check the file an try again!")
         sys.exit(-1)
     events = content.get('events', 0)
     for event in events:
@@ -372,7 +361,7 @@ def get_json_content():
             freq = event.get('freq')
             temp_list.append([summary, description, location, start_date, start_time, end_date, end_time, freq])
         except:
-            error_pop_up("An error occurred while reading the content of json file! Corrupt Data!\n")
+            logging.error("An error occurred while reading the content of json file! Corrupt Data!")
 
     for each_alarm in temp_list:
         if each_alarm[7] == 'yearly':
@@ -433,16 +422,16 @@ if __name__ == "__main__":
     else:
         events_list = get_json_content()
 
-    # print(events_list)
     events_list = validate_date_time(events_list)
 
+    logging.info(f"There are {len(events_list)} events to come!")
+
     if not events_list:
-        error_pop_up("There is not a valid alarm to be set.")
+        logging.error("There is no valid alarm to be set.")
         sys.exit(0)
     alarms_pop_up(events_list)
 
     for event in events_list:
         alarm(event)
-        print("Alarm closed!\n")
-    # TO DO
-    # logs for succes or failure
+        logging.info("Alarm closed!\n")
+
