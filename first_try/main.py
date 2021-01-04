@@ -162,25 +162,6 @@ def add_weeks(start_date, start_time):
 
 # add days to a date, returns the next set alarm
 def add_days(start_date, start_time):
-    # try:
-    #     another_date = start_date.split('/')
-    # except:
-    #     logging.error("Corrupt data! Review the dates in the current file!")
-    #     sys.exit(-1)
-    # if len(another_date[2]) < 4:
-    #     another_date = datetime(int('20' + another_date[2]), int(another_date[0]), int(another_date[1]))
-    # else:
-    #     another_date = datetime(int(another_date[2]), int(another_date[0]), int(another_date[1]))
-    # curr_date = datetime.now()
-    # try:
-    #     split_time = start_time.split(':')
-    #
-    # except:
-    #     logging.error("Corrupt data! Review the timestamps in the current file!")
-    #     sys.exit(-1)
-    # split_time[0] = int(split_time[0])
-    # split_time[1] = int(split_time[1])
-
     curr_date = datetime.now()
     another_date = create_datetime(start_date, start_time)
     while curr_date.day > another_date.day:
@@ -198,41 +179,10 @@ def add_days(start_date, start_time):
 # sort the alarm list by date and time
 def sort_by_date_time(events_list):
     for i in range(0, len(events_list) - 1):
-        try:
-            split_date1 = events_list[i][3].split('/')
-        except:
-            logging.error("Corrupt data! Review the dates in the current file!")
-            sys.exit(-1)
-        try:
-            split_time1 = events_list[i][4].split(':')
-        except:
-            logging.error("Corrupt data! Review the timestamps in the current file!")
-            sys.exit(-1)
-        if len(split_date1[2]) < 4:
-            d1 = datetime(int('20' + split_date1[2]), int(split_date1[0]), int(split_date1[1]), int(split_time1[0]),
-                          int(split_time1[1]))
-        else:
-            d1 = datetime(int(split_date1[2]), int(split_date1[0]), int(split_date1[1]), int(split_time1[0]),
-                          int(split_time1[1]))
-
+        first_alarm_date = create_datetime(events_list[i][3], events_list[i][4])
         for j in range(i + 1, len(events_list)):
-            try:
-                split_date2 = events_list[j][3].split('/')
-            except:
-                logging.error("Corrupt data! Review the dates in the current file!")
-                sys.exit(-1)
-            try:
-                split_time2 = events_list[j][4].split(':')
-            except:
-                logging.error("Corrupt data! Review the timestamps in the current file!")
-                sys.exit(-1)
-            if len(split_date2[2]) < 4:
-                d2 = datetime(int('20' + split_date2[2]), int(split_date2[0]), int(split_date2[1]), int(split_time2[0]),
-                              int(split_time2[1]))
-            else:
-                d2 = datetime(int(split_date2[2]), int(split_date2[0]), int(split_date2[1]), int(split_time2[0]),
-                              int(split_time2[1]))
-            if d1 > d2:
+            second_alarm_date = create_datetime(events_list[j][3], events_list[j][4])
+            if first_alarm_date > second_alarm_date:
                 temp_list = events_list[i]
                 events_list[i] = events_list[j]
                 events_list[j] = temp_list
@@ -293,12 +243,6 @@ def alarm(event):
     while True:
         time.sleep(1)
         current_time = datetime.now()
-        # temp_date = event[3].split('/')
-        # temp_time = event[4].split(':')
-        # if len(temp_date[2]) < 4:
-        #     alarm_time = datetime(int('20' + temp_date[2]), int(temp_date[0]), int(temp_date[1]), int(temp_time[0]), int(temp_time[1]))
-        # else:
-        #     alarm_time = datetime(int(temp_date[2]), int(temp_date[0]), int(temp_date[1]), int(temp_time[0]), int(temp_time[1]))
         alarm_time = create_datetime(event[3], event[4])
         logging.info(f'current time {current_time} <> alarm setoff time {alarm_time}')
         if current_time >= alarm_time:
@@ -444,7 +388,7 @@ if __name__ == "__main__":
     # print(add_years("12/10/2020"))
     # print(add_months("12/10/2020"))
     # print(add_days("12/10/2020", "12:00"))
-    print(add_weeks("12/10/2020", "12:00"))
+    # print(add_weeks("12/10/2020", "12:00"))
     events_list = []
     file_type = verify_iput()
     if file_type == "ics":
@@ -452,7 +396,6 @@ if __name__ == "__main__":
     else:
         events_list = get_json_content()
 
-    alarms_pop_up(events_list)
     events_list = validate_date_time(events_list)
 
     logging.info(f"There are {len(events_list)} events to come!")
