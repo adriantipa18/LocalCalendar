@@ -61,36 +61,11 @@ def add_years(start_date, start_hour):
 
 
 # add months to a date, returns the next set alarm
-def add_months(start_date):
-    try:
-        another_date = start_date.split('/')
-    except:
-        logging.error("Corrupt data! Review the dates in the current file!")
-        sys.exit(-1)
-    if len(another_date[2]) < 4:
-        another_date = datetime(int('20' + another_date[2]), int(another_date[0]), int(another_date[1]))
-    else:
-        another_date = datetime(int(another_date[2]), int(another_date[0]), int(another_date[1]))
+def add_months(start_date, start_time):
+    another_date = create_datetime(start_date, start_time)
     curr_date = datetime.now()
 
-    while curr_date.year != another_date.year:
-        if check_leap_year(another_date.year):
-            another_date += timedelta(366)
-        else:
-            another_date += timedelta(365)
-
-    while curr_date.month > another_date.month:
-        if another_date.month == 1 or another_date.month == 3 or another_date.month == 5 or another_date.month == 7 or another_date.month == 8 or another_date.month == 10 or another_date.month == 12:
-            another_date += timedelta(31)
-        elif another_date.month == 2:
-            if check_leap_year(another_date.year):
-                another_date += timedelta(29)
-            else:
-                another_date += timedelta(28)
-        else:
-            another_date += timedelta(30)
-
-    if curr_date.day > another_date.day:
+    while curr_date >= another_date:
         if another_date.month == 1 or another_date.month == 3 or another_date.month == 5 or another_date.month == 7 or another_date.month == 8 or another_date.month == 10 or another_date.month == 12:
             another_date += timedelta(31)
         elif another_date.month == 2:
@@ -209,7 +184,7 @@ def alarm(event):
         time.sleep(1)
         current_time = datetime.now()
         alarm_time = create_datetime(event[3], event[4])
-        logging.info(f'current time {current_time} <> alarm setoff time {alarm_time}')
+        logging.info(f'current time {current_time} <> alarm set off time {alarm_time}')
         if current_time >= alarm_time:
             winsound.PlaySound("sound.wav", winsound.SND_ASYNC)
             alarm_pop_up(event)
@@ -264,8 +239,8 @@ def get_ics_content():
             each_alarm[3] = add_years(each_alarm[3], each_alarm[4])
             each_alarm[5] = add_years(each_alarm[5], each_alarm[4])
         elif ' '.join(each_alarm[7]) == 'MONTHLY':
-            each_alarm[3] = add_months(each_alarm[3])
-            each_alarm[5] = add_months(each_alarm[5])
+            each_alarm[3] = add_months(each_alarm[3], each_alarm[4])
+            each_alarm[5] = add_months(each_alarm[5], each_alarm[4])
         elif ' '.join(each_alarm[7]) == 'WEEKLY':
             each_alarm[3] = add_weeks(each_alarm[3], each_alarm[4])
             each_alarm[5] = add_weeks(each_alarm[5], each_alarm[4])
@@ -307,8 +282,8 @@ def get_json_content():
             each_alarm[3] = add_years(each_alarm[3], each_alarm[4])
             each_alarm[5] = add_years(each_alarm[5], each_alarm[4])
         elif each_alarm[7] == 'monthly':
-            each_alarm[3] = add_months(each_alarm[3])
-            each_alarm[5] = add_months(each_alarm[5])
+            each_alarm[3] = add_months(each_alarm[3], each_alarm[4])
+            each_alarm[5] = add_months(each_alarm[5], each_alarm[4])
         elif each_alarm[7] == 'weekly':
             each_alarm[3] = add_weeks(each_alarm[3], each_alarm[4])
             each_alarm[5] = add_weeks(each_alarm[5], each_alarm[4])
@@ -351,7 +326,7 @@ if __name__ == "__main__":
     # print(date.hour)
     # temp_event = [0, 0, 0, "12/10/2020", "12:00", "14:58", 0]
     # print(add_years("01/01/2021", "10:00"))
-    # print(add_months("12/10/2020"))
+    # print(add_months("12/10/2022", "12:00"))
     # print(add_days("12/10/2020", "12:00"))
     # print(add_weeks("01/01/2021", "12:00"))
     events_list = []
