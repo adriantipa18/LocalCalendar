@@ -144,8 +144,7 @@ def add_weeks(start_date, start_time):
         sys.exit(-1)
     split_time[0] = int(split_time[0])
     split_time[1] = int(split_time[1])
-
-    while curr_date.month > another_date.month:
+    while curr_date.month != another_date.month:
         another_date += timedelta(7)
 
     while curr_date.day > another_date.day:
@@ -445,7 +444,7 @@ if __name__ == "__main__":
     # print(add_years("12/10/2020"))
     # print(add_months("12/10/2020"))
     # print(add_days("12/10/2020", "12:00"))
-    # print(add_weeks("12/10/2020", "12:00"))
+    print(add_weeks("12/10/2020", "12:00"))
     events_list = []
     file_type = verify_iput()
     if file_type == "ics":
@@ -453,6 +452,7 @@ if __name__ == "__main__":
     else:
         events_list = get_json_content()
 
+    alarms_pop_up(events_list)
     events_list = validate_date_time(events_list)
 
     logging.info(f"There are {len(events_list)} events to come!")
