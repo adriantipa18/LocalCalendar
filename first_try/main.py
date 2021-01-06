@@ -14,13 +14,13 @@ logging.basicConfig(level=logging.DEBUG)
 def create_datetime(start_date, start_time):
     try:
         another_date = start_date.split('/')
-    except:
+    except ValueError:
         logging.error("Corrupt data! Review the dates in the current file!")
         sys.exit(-1)
     try:
         split_time = start_time.split(':')
 
-    except:
+    except ValueError:
         logging.error("Corrupt data! Review the timestamps in the current file!")
         sys.exit(-1)
 
@@ -29,7 +29,7 @@ def create_datetime(start_date, start_time):
             alarm_time = datetime(int('20' + another_date[2]), int(another_date[0]), int(another_date[1]), int(split_time[0]), int(split_time[1]))
         else:
             alarm_time = datetime(int(another_date[2]), int(another_date[0]), int(another_date[1]), int(split_time[0]), int(split_time[1]))
-    except:
+    except ValueError:
         logging.error("Corrupt data! Review the dates/timestamps in the current file!")
         sys.exit(-1)
     return alarm_time
@@ -213,7 +213,7 @@ def get_ics_content():
     try:
         file_handler = open(sys.argv[1], 'rb')
         file_cal = icalendar.Calendar.from_ical(file_handler.read())
-    except:
+    except ValueError:
         logging.error("An error occurred opening the file! Check the file an try again!")
         sys.exit(-1)
     for content in file_cal.walk():
@@ -234,7 +234,7 @@ def get_ics_content():
                 else:
                     freq = ""
                 temp_list.append([summary, description, location, start_date, start_time, end_date, end_time, freq])
-        except:
+        except ValueError:
             logging.error("An error occurred while reading the content of ics file! Corrupt Data!")
 
     for each_alarm in temp_list:
@@ -262,7 +262,7 @@ def get_json_content():
     try:
         with open(sys.argv[1]) as file_handler:
             content = json.load(file_handler)
-    except:
+    except ValueError:
         logging.error("An error occurred opening the file! Check the file an try again!")
         sys.exit(-1)
     events = content.get('events', 0)
@@ -277,7 +277,7 @@ def get_json_content():
             end_time = event.get('end_time')
             freq = event.get('freq')
             temp_list.append([summary, description, location, start_date, start_time, end_date, end_time, freq])
-        except:
+        except ValueError:
             logging.error("An error occurred while reading the content of json file! Corrupt Data!")
 
     for each_alarm in temp_list:
