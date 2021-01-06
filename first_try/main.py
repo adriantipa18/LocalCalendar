@@ -1,9 +1,9 @@
 import icalendar
-import sys
 import time
 import winsound
 from datetime import datetime, timedelta
 import tkinter as tk
+from tkinter import *
 import json
 import logging
 
@@ -24,11 +24,14 @@ def create_datetime(start_date, start_time):
         logging.error("Corrupt data! Review the timestamps in the current file!")
         sys.exit(-1)
 
-    if len(another_date[2]) < 4:
-        alarm_time = datetime(int('20' + another_date[2]), int(another_date[0]), int(another_date[1]), int(split_time[0]), int(split_time[1]))
-    else:
-        alarm_time = datetime(int(another_date[2]), int(another_date[0]), int(another_date[1]), int(split_time[0]), int(split_time[1]))
-
+    try:
+        if len(another_date[2]) < 4:
+            alarm_time = datetime(int('20' + another_date[2]), int(another_date[0]), int(another_date[1]), int(split_time[0]), int(split_time[1]))
+        else:
+            alarm_time = datetime(int(another_date[2]), int(another_date[0]), int(another_date[1]), int(split_time[0]), int(split_time[1]))
+    except:
+        logging.error("Corrupt data! Review the dates/timestamps in the current file!")
+        sys.exit(-1)
     return alarm_time
 
 
@@ -160,22 +163,20 @@ def alarm_pop_up(event):
 # # creates a pop-up window with all alerts, printing all information about the alarm
 def alarms_pop_up(events_list):
     window = tk.Tk()
-
+    scrollbar = Scrollbar(window)
+    scrollbar.pack(side=RIGHT, fill=Y)
+    upcoming_events = tk.Listbox(window, width=40, yscrollcommand=scrollbar.set)
     for each_event in events_list:
-        label_alarm = new_label(f"Alarm for {each_event[0]}")
-        label_alarm.pack()
-        label_description = new_label(each_event[1])
-        label_description.pack()
+        upcoming_events.insert(END, f"Alarm for {each_event[0]}")
+        upcoming_events.insert(END, f"Alarm for {each_event[1]}")
         if each_event[2]:
-            label_local = new_label(f"Locul:  {each_event[2]}")
-            label_local.pack()
-        label_startdt = new_label(f"La data {each_event[3]}")
-        label_starttm = new_label(f"De la  {each_event[4]} pana la {each_event[6]}")
-        label_empty = new_label(" ")
-        label_startdt.pack()
-        label_starttm.pack()
-        label_empty.pack()
+            upcoming_events.insert(END, f"Locul:  {each_event[2]}")
+        upcoming_events.insert(END, f"La data {each_event[3]}")
+        upcoming_events.insert(END, f"De la  {each_event[4]} pana la {each_event[6]}")
+        upcoming_events.insert(END, "")
 
+    upcoming_events.pack(side=LEFT, fill=BOTH)
+    scrollbar.config(command=upcoming_events.yview)
     window.mainloop()
 
 
@@ -301,36 +302,19 @@ def get_json_content():
 # validates the alarms, regarding date and time in relation to the current date and time
 def validate_date_time(events):
     current_time = datetime.now()
-    curr_time = current_time.strftime("%H:%M")
+    tomorrow = current_time + timedelta(1)
     validated_events = []
     for event in events:
-        split_date = event[3].split('/')
-        if len(split_date[2]) < 4:
-            date = datetime(int('20' + split_date[2]), int(split_date[0]), int(split_date[1]))
-        else:
-            date = datetime(int(split_date[2]), int(split_date[0]), int(split_date[1]))
-        if date.year > datetime.now().year:
-            validated_events.append(event)
-        elif date.year == datetime.now().year and date.month >= datetime.now().month:
-            if date.month == datetime.now().month:
-                if date.day > datetime.now().day:
-                    validated_events.append(event)
-                elif date.day == datetime.now().day and event[4] >= curr_time:
-                    validated_events.append(event)
-            else:
-                validated_events.append(event)
+        alarm_date = create_datetime(event[3], event[4])
+        if current_time <= alarm_date:
+             validated_events.append(event)
+        # if current_time <= alarm_date <= tomorrow:
+        #     validated_events.append(event)
 
     return validated_events
 
 
 if __name__ == "__main__":
-    # date = datetime.now()
-    # print(date.hour)
-    # temp_event = [0, 0, 0, "12/10/2020", "12:00", "14:58", 0]
-    # print(add_years("01/01/2021", "10:00"))
-    # print(add_months("12/10/2022", "12:00"))
-    # print(add_days("12/10/2020", "12:00"))
-    # print(add_weeks("01/01/2021", "12:00"))
     events_list = []
     file_type = verify_iput()
     if file_type == "ics":
@@ -339,7 +323,6 @@ if __name__ == "__main__":
         events_list = get_json_content()
 
     events_list = validate_date_time(events_list)
-
     if not events_list:
         logging.error("There is no valid alarm to be set.")
         sys.exit(0)
