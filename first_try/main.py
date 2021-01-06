@@ -162,15 +162,16 @@ def alarms_pop_up(events_list):
     window = tk.Tk()
 
     for each_event in events_list:
-        label_alarm = new_label("Alarm for " + each_event[0])
-        label_description = new_label(each_event[1])
-        label_local = new_label("Locul: " + each_event[2])
-        label_startdt = new_label("La data " + each_event[3])
-        label_starttm = new_label("De la " + each_event[4] + " pana la " + each_event[6])
-        label_empty = new_label(" ")
+        label_alarm = new_label(f"Alarm for {each_event[0]}")
         label_alarm.pack()
+        label_description = new_label(each_event[1])
         label_description.pack()
-        label_local.pack()
+        if each_event[2]:
+            label_local = new_label(f"Locul:  {each_event[2]}")
+            label_local.pack()
+        label_startdt = new_label(f"La data {each_event[3]}")
+        label_starttm = new_label(f"De la  {each_event[4]} pana la {each_event[6]}")
+        label_empty = new_label(" ")
         label_startdt.pack()
         label_starttm.pack()
         label_empty.pack()
@@ -185,6 +186,7 @@ def alarm(event):
         current_time = datetime.now()
         alarm_time = create_datetime(event[3], event[4])
         logging.info(f'current time {current_time} <> alarm set off time {alarm_time}')
+        alarm_time -= timedelta(minutes=30)
         if current_time >= alarm_time:
             winsound.PlaySound("sound.wav", winsound.SND_ASYNC)
             alarm_pop_up(event)
@@ -337,8 +339,6 @@ if __name__ == "__main__":
         events_list = get_json_content()
 
     events_list = validate_date_time(events_list)
-
-    logging.info(f"There are {len(events_list)} events to come!")
 
     if not events_list:
         logging.error("There is no valid alarm to be set.")
