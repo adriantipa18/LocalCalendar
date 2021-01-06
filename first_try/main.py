@@ -204,7 +204,7 @@ def verify_iput():
         return "json"
     else:
         logging.error("Not a ics or a json file!")
-        sys.exit(1)
+        sys.exit(-1)
 
 
 # opens and reads the content of a ics file
